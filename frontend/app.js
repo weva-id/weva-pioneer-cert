@@ -1,25 +1,46 @@
-let walletAddress = null;
+// app.js - Frontend Logic
 
-document.getElementById("connectBtn").onclick = async () => {
-  if (window.ethereum) {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    walletAddress = await signer.getAddress();
-    document.getElementById("wallet").innerText = "Connected: " + walletAddress;
-    document.getElementById("generateBtn").disabled = false;
-  } else {
-    alert("Please install MetaMask!");
-  }
-};
+// Tangkap element HTML
+const connectBtn = document.getElementById('connectBtn');
+const generateBtn = document.getElementById('generateBtn');
+const walletAddressElement = document.getElementById('walletAddress');
+const certElement = document.getElementById('cert');
 
-document.getElementById("generateBtn").onclick = async () => {
-  const res = await fetch("http://localhost:5000/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ walletAddress })
-  });
+// 1. Fungsi untuk Connect Wallet
+connectBtn.addEventListener('click', async () => {
+    if (typeof window.ethereum !== 'undefined') {
+        console.log('MetaMask ditemukan!');
+        try {
+            // Minta akses ke akun
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const account = accounts[0];
+            
+            // Tampilkan alamat wallet (yang disingkat)
+            const shortenedAddress = `${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+            walletAddressElement.textContent = `Wallet: ${shortenedAddress}`;
+            
+            // Aktifkan tombol generate
+            generateBtn.disabled = false;
+            console.log("Wallet terhubung:", account);
+            
+        } catch (error) {
+            console.error("User menolak koneksi:", error);
+            alert("Gagal connect ke wallet! Pastikan kamu approve koneksinya di MetaMask.");
+        }
+    } else {
+        alert("MetaMask tidak terdeteksi! Silakan install extension MetaMask.");
+    }
+});
 
-  const data = await res.json();
-  document.getElementById("cert").innerText = JSON.stringify(data.cert, null, 2);
-};
+// 2. Fungsi untuk Generate Certificate (Buat Sementara)
+generateBtn.addEventListener('click', () => {
+    // Untuk sementara, kita buat data dummy dulu
+    const dummyCert = {
+        type: "WevaPioneer",
+        message: "Ini adalah sertifikat percobaan!",
+        issuedAt: new Date().toISOString()
+    };
+    // Tampilkan data dummy di screen
+    certElement.textContent = JSON.stringify(dummyCert, null, 2);
+    console.log("Sertifikat dummy dibuat:", dummyCert);
+});
